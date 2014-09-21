@@ -1,3 +1,13 @@
+if (!require('data.table')) {
+    writeLines("Need to install data.table package")
+    install.packages("data.table")
+    if (require('data.table')) {
+        writeLines('data.table package installed')
+    } else {
+        stop('Could not install required package data.table.')
+    }
+}
+
 run_analysis <- function()  {
     if (!file.exists("UCI HAR Dataset/test/X_test.txt") ||
             !file.exists("UCI HAR Dataset/test/y_test.txt") ||
@@ -25,8 +35,18 @@ run_analysis <- function()  {
     # Load activity labels vector
     activity_labels <- read.table('UCI HAR Dataset/activity_labels.txt', col.names = c('id', 'label'))
     
-    process_dataset('test', features=selected_features, activities=activity_labels)
+    # Read and process the datasets
+    writeLines("Reading and processing training data")
+    train_data <- process_dataset('train', features=selected_features, activities=activity_labels)
     
+    writeLines("Reading and processing test data")
+    test_data <- process_dataset('test', features=selected_features, activities=activity_labels)
+    
+    # create one merged dataset
+    writeLines("Merging datasets")
+    merged_data <-rbind(train_data, test_data)
+    
+    merged_data <- data.table(merged_data)
 }
 
 process_dataset <- function(dataset, features, activities) {
@@ -39,7 +59,6 @@ process_dataset <- function(dataset, features, activities) {
     
     # Load the activity data
     activity_vector <- read.table(get_pathname(dataset, 'y'))[,1]
-    # print(head(activity_vector))
 
     # apply column names from the selected features
     names(feature_vector) <- features$label
@@ -49,8 +68,8 @@ process_dataset <- function(dataset, features, activities) {
     
     # add the subject data to the dataset
     feature_vector$subject <- factor(subject_ids)
-    # print(head(feature_vector))
-    
+
+    feature_vector    
 }
 
 get_pathname <- function(dataset, subset) {
