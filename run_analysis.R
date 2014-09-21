@@ -26,31 +26,31 @@ run_analysis <- function()  {
     }
     
     # Load feature vector
-    feature_vector_labels <- read.table("UCI HAR Dataset/features.txt", col.names = c('id', 'label'))
+    featureVectorLabels <- read.table("UCI HAR Dataset/features.txt", col.names = c('id', 'label'))
     
     # Reducing the feature vector to only contain features ending in -mean() or -std(), which represent
     # the features for mean and standard deviation for each measurement
-    selected_features <- subset(feature_vector_labels, grepl('-(std|mean)\\(\\)', feature_vector_labels$label))
+    selectedFeatures <- subset(featureVectorLabels, grepl('-(std|mean)\\(\\)', featureVectorLabels$label))
     
     # Load activity labels vector
-    activity_labels <- read.table('UCI HAR Dataset/activity_labels.txt', col.names = c('id', 'label'))
+    activityLabels <- read.table('UCI HAR Dataset/activity_labels.txt', col.names = c('id', 'label'))
     
     # Read and process the datasets
     writeLines("Reading and processing training data")
-    train_data <- process_dataset('train', features=selected_features, activities=activity_labels)
+    trainingData <- process_dataset('train', features=selectedFeatures, activities=activityLabels)
     
     writeLines("Reading and processing test data")
-    test_data <- process_dataset('test', features=selected_features, activities=activity_labels)
+    testData <- process_dataset('test', features=selectedFeatures, activities=activityLabels)
     
     # create one merged dataset
     writeLines("Merging datasets")
-    merged_data <-rbind(train_data, test_data)
+    mergedData <-rbind(trainingData, testData)
     
-    merged_data <- data.table(merged_data)
+    mergedData <- data.table(mergedData)
     
-    tidy_data <- create_tidy_data(merged_data)
+    tidy_data <- create_tidy_data(mergedData)
     
-    write.csv(merged_data, file = 'raw_data.csv', row.names = FALSE)
+    write.csv(mergedData, file = 'raw_data.csv', row.names = FALSE)
     write.csv(tidy_data, file = 'tidy_data.csv', row.names = FALSE)
     
     writeLines("Done. Raw data can be found in raw_data.csv, tidy data can be found in tidy_data.csv")
@@ -59,34 +59,34 @@ run_analysis <- function()  {
 process_dataset <- function(dataset, features, activities) {
     
     # Load subject data
-    subject_ids <- read.table(get_pathname(dataset, 'subject'))[,1]
+    subjectIds <- read.table(get_pathname(dataset, 'subject'))[,1]
     
     # Load the measurement dataset and keep only the selected features
-    feature_vector <- read.table(get_pathname(dataset, 'X'))[,features$id]
+    featureVector <- read.table(get_pathname(dataset, 'X'))[,features$id]
     
     # Load the activity data
-    activity_vector <- read.table(get_pathname(dataset, 'y'))[,1]
+    activityVector <- read.table(get_pathname(dataset, 'y'))[,1]
 
     # apply column names from the selected features
-    names(feature_vector) <- features$label
+    names(featureVector) <- features$label
     
     # add the activities from the activity data to the dataset
-    feature_vector$activity <- factor(activity_vector, levels=activities$id, labels=activities$label)
+    featureVector$activity <- factor(activityVector, levels=activities$id, labels=activities$label)
     
     # add the subject data to the dataset
-    feature_vector$subject <- factor(subject_ids)
+    featureVector$subject <- factor(subjectIds)
 
-    feature_vector    
+    featureVector    
 }
 
 get_pathname <- function(dataset, subset) {
     pathname <- paste(paste('UCI HAR Dataset', dataset, paste(subset, '_', dataset, '.txt', sep = ''), sep='/'))
 }
 
-create_tidy_data <- function(source_data) {
+create_tidy_data <- function(rawData) {
     
     # calculate the average of each feature per activity and subject
-    tidy <- source_data[, lapply(.SD, mean), by=list(activity, subject)]
+    tidy <- rawData[, lapply(.SD, mean), by=list(activity, subject)]
     
     # clean column names
     names <- names(tidy)
