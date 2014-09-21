@@ -22,4 +22,37 @@ run_analysis <- function()  {
     # the features for mean and standard deviation for each measurement
     selected_features <- subset(feature_vector_labels, grepl('-(std|mean)\\(\\)', feature_vector_labels$label))
     
+    # Load activity labels vector
+    activity_labels <- read.table('UCI HAR Dataset/activity_labels.txt', col.names = c('id', 'label'))
+    
+    process_dataset('test', features=selected_features, activities=activity_labels)
+    
+}
+
+process_dataset <- function(dataset, features, activities) {
+    
+    # Load subject data
+    subject_ids <- read.table(get_pathname(dataset, 'subject'))[,1]
+    
+    # Load the measurement dataset and keep only the selected features
+    feature_vector <- read.table(get_pathname(dataset, 'X'))[,features$id]
+    
+    # Load the activity data
+    activity_vector <- read.table(get_pathname(dataset, 'y'))[,1]
+    # print(head(activity_vector))
+
+    # apply column names from the selected features
+    names(feature_vector) <- features$label
+    
+    # add the activities from the activity data to the dataset
+    feature_vector$activity <- factor(activity_vector, levels=activities$id, labels=activities$label)
+    
+    # add the subject data to the dataset
+    feature_vector$subject <- factor(subject_ids)
+    # print(head(feature_vector))
+    
+}
+
+get_pathname <- function(dataset, subset) {
+    pathname <- paste(paste('UCI HAR Dataset', dataset, paste(subset, '_', dataset, '.txt', sep = ''), sep='/'))
 }
