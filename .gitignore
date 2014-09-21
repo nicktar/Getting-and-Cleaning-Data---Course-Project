@@ -9,3 +9,5 @@
 
 # RStudio files
 .Rproj.user/
+/dataset.zip
+/UCI HAR Dataset
