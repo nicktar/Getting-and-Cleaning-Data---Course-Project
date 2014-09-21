@@ -47,6 +47,13 @@ run_analysis <- function()  {
     merged_data <-rbind(train_data, test_data)
     
     merged_data <- data.table(merged_data)
+    
+    tidy_data <- create_tidy_data(merged_data)
+    
+    write.csv(merged_data, file = 'raw_data.csv', row.names = FALSE)
+    write.csv(tidy_data, file = 'tidy_data.csv', row.names = FALSE)
+    
+    writeLines("Done. Raw data can be found in raw_data.csv, tidy data can be found in tidy_data.csv")
 }
 
 process_dataset <- function(dataset, features, activities) {
@@ -74,4 +81,20 @@ process_dataset <- function(dataset, features, activities) {
 
 get_pathname <- function(dataset, subset) {
     pathname <- paste(paste('UCI HAR Dataset', dataset, paste(subset, '_', dataset, '.txt', sep = ''), sep='/'))
+}
+
+create_tidy_data <- function(source_data) {
+    
+    # calculate the average of each feature per activity and subject
+    tidy <- source_data[, lapply(.SD, mean), by=list(activity, subject)]
+    
+    # clean column names
+    names <- names(tidy)
+    names <- gsub('std\\(\\)', 'Standard', names)
+    names <- gsub('mean\\(\\)', 'Mean', names)
+    names <- gsub('BodyBody', 'Body', names)
+    setnames(tidy, names)
+    
+    tidy
+    
 }
