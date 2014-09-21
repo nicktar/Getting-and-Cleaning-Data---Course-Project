@@ -90,8 +90,10 @@ create_tidy_data <- function(rawData) {
     
     # clean column names
     names <- names(tidy)
+    
     names <- gsub('std\\(\\)', 'Standard', names)
     names <- gsub('mean\\(\\)', 'Mean', names)
+    names <- gsub('-', '', names)
     names <- gsub('BodyBody', 'Body', names)
     setnames(tidy, names)
     
